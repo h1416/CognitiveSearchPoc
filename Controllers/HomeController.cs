@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Azure.Search;
 using Microsoft.Azure.Search.Models;
 using System;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace AzureSearchPoc.Controllers
 {
@@ -97,7 +99,34 @@ namespace AzureSearchPoc.Controllers
             return View("Index", model);
         }
 
+        public async Task<ActionResult> Suggest(bool highlights, bool fuzzy, string term)
+        {
+            InitSearch();
 
+            // Setup the suggest parameters.
+            var parameters = new SuggestParameters()
+            {
+                UseFuzzyMatching = fuzzy,
+                Top = 8,
+            };
+
+            if (highlights)
+            {
+                parameters.HighlightPreTag = "<b>";
+                parameters.HighlightPostTag = "</b>";
+            }
+
+            // Only one suggester can be specified per index. It is defined in the index schema.
+            // The name of the suggester is set when the suggester is specified by other API calls.
+            // The suggester for the hotel database is called "sg", and simply searches the hotel name.
+            DocumentSuggestResult<Hotel> suggestResult = await _indexClient.Documents.SuggestAsync<Hotel>(term, "sg", parameters);
+
+            // Convert the suggest query results to a list that can be displayed in the client.
+            List<string> suggestions = suggestResult.Results.Select(x => x.Text).ToList();
+
+            // Return the list of suggestions.
+            return new JsonResult(suggestions);
+        }
 
 
 
