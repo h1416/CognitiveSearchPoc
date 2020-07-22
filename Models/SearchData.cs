@@ -22,6 +22,10 @@ namespace AzureSearchPoc.Models
         // Used when page numbers, or next or prev buttons, have been selected.
         public string paging { get; set; }
 
+        // Facet Filters 
+        public string categoryFilter { get; set; }
+        public string amenityFilter { get; set; }
+
         // The list of results.
         public DocumentSearchResult<Hotel> resultList;
     }
