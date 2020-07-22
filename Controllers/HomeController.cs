@@ -147,6 +147,51 @@ namespace AzureSearchPoc.Controllers
             return new JsonResult(autocomplete);
         }
 
+        public async Task<ActionResult> AutocompleteAndSuggest(string term)
+        {
+            InitSearch();
+
+            // Setup the type-ahead search parameters.
+            var ap = new AutocompleteParameters()
+            {
+                AutocompleteMode = AutocompleteMode.OneTermWithContext,
+                Top = 1,
+            };
+            AutocompleteResult autocompleteResult = await _indexClient.Documents.AutocompleteAsync(term, "sg", ap);
+
+            // Setup the suggest search parameters.
+            var sp = new SuggestParameters()
+            {
+                Top = 8,
+            };
+
+            // Only one suggester can be specified per index. The name of the suggester is set when the suggester is specified by other API calls.
+            // The suggester for the hotel database is called "sg", and it searches only the hotel name.
+            DocumentSuggestResult<Hotel> suggestResult = await _indexClient.Documents.SuggestAsync<Hotel>(term, "sg", sp);
+
+            // Create an empty list.
+            var results = new List<string>();
+
+            if (autocompleteResult.Results.Count > 0)
+            {
+                // Add the top result for type-ahead.
+                results.Add(autocompleteResult.Results[0].Text);
+            }
+            else
+            {
+                // There were no type-ahead suggestions, so add an empty string.
+                results.Add("");
+            }
+            for (int n = 0; n < suggestResult.Results.Count; n++)
+            {
+                // Now add the suggestions.
+                results.Add(suggestResult.Results[n].Text);
+            }
+
+            // Return the list.
+            return new JsonResult(results);
+        }
+
 
         public IActionResult Privacy()
         {
