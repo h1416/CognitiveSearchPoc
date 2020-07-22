@@ -128,6 +128,24 @@ namespace AzureSearchPoc.Controllers
             return new JsonResult(suggestions);
         }
 
+        public async Task<ActionResult> AutoComplete(string term)
+        {
+            InitSearch();
+
+            // Setup the autocomplete parameters.
+            var ap = new AutocompleteParameters()
+            {
+                AutocompleteMode = AutocompleteMode.OneTermWithContext,
+                Top = 6
+            };
+            AutocompleteResult autocompleteResult = await _indexClient.Documents.AutocompleteAsync(term, "sg", ap);
+
+            // Convert the results to a list that can be displayed in the client.
+            List<string> autocomplete = autocompleteResult.Results.Select(x => x.Text).ToList();
+
+            // Return the list.
+            return new JsonResult(autocomplete);
+        }
 
 
         public IActionResult Privacy()

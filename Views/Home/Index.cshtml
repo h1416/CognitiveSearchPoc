@@ -24,7 +24,7 @@
     {
         // Display the search text box, with the search icon to the right of it.
         <div class="searchBoxForm">
-            @Html.TextBoxFor(m => m.searchText, new { @class = "searchBox", @id = "azuresuggesthighlights" }) <input class="searchBoxSubmit" type="submit" value="">
+            @Html.TextBoxFor(m => m.searchText, new { @class = "searchBox", @id = "azureautocompletebasic" }) <input class="searchBoxSubmit" type="submit" value="">
         </div>
         @*Simple autocomplete
             <script>
@@ -37,30 +37,31 @@
                     }
                 });
             </script>*@
-        <script>
-            var updateTextbox = function (event, ui) {
-                var result = ui.item.value.replace(/<\/?[^>]+(>|$)/g, "");
-                $("#azuresuggesthighlights").val(result);
-                return false;
-            };
+        @* autocomplete with highlight
+                <script>
+                var updateTextbox = function (event, ui) {
+                    var result = ui.item.value.replace(/<\/?[^>]+(>|$)/g, "");
+                    $("#azuresuggesthighlights").val(result);
+                    return false;
+                };
 
-            $("#azuresuggesthighlights").autocomplete({
-                html: true,
-                source: "/home/suggest?highlights=true&fuzzy=false&",
-                minLength: 2,
-                position: {
-                    my: "left top",
-                    at: "left-23 bottom+10"
-                },
-                select: updateTextbox,
-                focus: updateTextbox
-            }).data("ui-autocomplete")._renderItem = function (ul, item) {
-                return $("<li></li>")
-                    .data("item.autocomplete", item)
-                    .append("<a>" + item.label + "</a>")
-                    .appendTo(ul);
-            };
-        </script>
+                $("#azuresuggesthighlights").autocomplete({
+                    html: true,
+                    source: "/home/suggest?highlights=true&fuzzy=false&",
+                    minLength: 2,
+                    position: {
+                        my: "left top",
+                        at: "left-23 bottom+10"
+                    },
+                    select: updateTextbox,
+                    focus: updateTextbox
+                }).data("ui-autocomplete")._renderItem = function (ul, item) {
+                    return $("<li></li>")
+                        .data("item.autocomplete", item)
+                        .append("<a>" + item.label + "</a>")
+                        .appendTo(ul);
+                };
+            </script>*@
         <script>
             $("#azureautocompletebasic").autocomplete({
                 source: "/Home/Autocomplete",
