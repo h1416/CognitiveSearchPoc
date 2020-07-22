@@ -20,19 +20,54 @@
             @Html.TextBoxFor(m => m.searchText, new { @class = "searchBox" }) <input class="searchBoxSubmit" type="submit" value="">
         </div>
 
-        @if (Model != null)
+        @* This is for paging options
+            @if (Model != null)
+            {
+                // Show the result count.
+                <p class="sampleText">
+                    @Html.DisplayFor(m => m.resultList.Count) Results
+                </p>
+
+                @for (var i = 0; i < Model.resultList.Results.Count; i++)
+                {
+                    // Display the hotel name and description.
+                    @Html.TextAreaFor(m => Model.resultList.Results[i].Document.HotelName, new { @class = "box1" })
+                    @Html.TextArea($"desc{i}", Model.resultList.Results[i].Document.Description, new { @class = "box2" })
+                }
+            }*@
+
+        @if (Model != null) // This is for infinite scrolling option
         {
             // Show the result count.
             <p class="sampleText">
                 @Html.DisplayFor(m => m.resultList.Count) Results
             </p>
 
-            @for (var i = 0; i < Model.resultList.Results.Count; i++)
-            {
-                // Display the hotel name and description.
-                @Html.TextAreaFor(m => Model.resultList.Results[i].Document.HotelName, new { @class = "box1" })
-                @Html.TextArea($"desc{i}", Model.resultList.Results[i].Document.Description, new { @class = "box2" })
-            }
+            <div id="myDiv" style="width: 800px; height: 450px; overflow-y: scroll;" onscroll="scrolled()">
+
+                <!-- Show the hotel data. -->
+                @for (var i = 0; i < Model.resultList.Results.Count; i++)
+                {
+                    // Display the hotel name and description.
+                    @Html.TextAreaFor(m => Model.resultList.Results[i].Document.HotelName, new { @class = "box1" })
+                    @Html.TextArea($"desc{i}", Model.resultList.Results[i].Document.Description, new { @class = "box2" })
+                }
+            </div>
+            <script>
+                function scrolled() {
+                    if (myDiv.offsetHeight + myDiv.scrollTop >= myDiv.scrollHeight) {
+                        $.getJSON("/Home/Next", function (data) {
+                            var div = document.getElementById('myDiv');
+
+                            // Append the returned data to the current list of hotels.
+                            for (var i = 0; i < data.length; i += 2) {
+                                div.innerHTML += '\n<textarea class="box1">' + data[i] + '</textarea>';
+                                div.innerHTML += '\n<textarea class="box2">' + data[i + 1] + '</textarea>';
+                            }
+                        });
+                    }
+                }
+            </script>
         }
     }
 

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Azure.Search;
 using Microsoft.Azure.Search.Models;
 using System;
+using System.Collections.Generic;
 
 namespace AzureSearchPoc.Controllers
 {
@@ -28,6 +29,68 @@ namespace AzureSearchPoc.Controllers
             return View();
         }
 
+        // For infinite Scrolling option
+        [HttpPost]
+        public async Task<ActionResult> Index(SearchData model)
+        {
+            try
+            {
+                InitSearch();
+
+                int page;
+
+                if (model.paging != null && model.paging == "next")
+                {
+                    // Increment the page.
+                    page = (int)TempData["page"] + 1;
+
+                    // Recover the search text.
+                    model.searchText = TempData["searchfor"].ToString();
+                }
+                else
+                {
+                    // First call. Check for valid text input.
+                    if (model.searchText == null)
+                    {
+                        model.searchText = "";
+                    }
+                    page = 0;
+                }
+
+                // Setup the search parameters.
+                var parameters = new SearchParameters
+                {
+                    // Enter Hotel property names into this list so only these values will be returned.
+                    // If Select is empty, all values will be returned, which can be inefficient.
+                    Select = new[] { "HotelName", "Description" },
+                    SearchMode = SearchMode.All,
+
+                    // Skip past results that have already been returned.
+                    Skip = page * GlobalVariables.ResultsPerPage,
+
+                    // Take only the next page worth of results.
+                    Top = GlobalVariables.ResultsPerPage,
+
+                    // Include the total number of results.
+                    IncludeTotalResultCount = true,
+                };
+
+                // For efficiency, the search call should be asynchronous, so use SearchAsync rather than Search.
+                model.resultList = await _indexClient.Documents.SearchAsync<Hotel>(model.searchText, parameters);
+
+                // Ensure TempData is stored for the next call.
+                TempData["page"] = page;
+                TempData["searchfor"] = model.searchText;
+            }
+            catch
+            {
+                return View("Error", new ErrorViewModel { RequestId = "1" });
+            }
+            return View("Index", model);
+        }
+
+
+        /* This is for paging option
         [HttpPost]
         public async Task<ActionResult> Index(SearchData model)
         {
@@ -54,7 +117,29 @@ namespace AzureSearchPoc.Controllers
             }
             return View(model);
         }
+        */
 
+        public async Task<ActionResult> Next(SearchData model)
+        {
+            // Set the next page setting, and call the Index(model) action.
+            model.paging = "next";
+            await Index(model);
+
+            // Create an empty list.
+            var nextHotels = new List<string>();
+
+            // Add a hotel name, then description, to the list.
+            for (int n = 0; n < model.resultList.Results.Count; n++)
+            {
+                nextHotels.Add(model.resultList.Results[n].Document.HotelName);
+                nextHotels.Add(model.resultList.Results[n].Document.Description);
+            }
+
+            // Rather than return a view, return the list of data.
+            return new JsonResult(nextHotels);
+        }
+
+        /* for paging
         public async Task<ActionResult> Page(SearchData model)
         {
             try
@@ -96,6 +181,7 @@ namespace AzureSearchPoc.Controllers
             }
             return View("Index", model);
         }
+        */
 
 
 
@@ -127,6 +213,7 @@ namespace AzureSearchPoc.Controllers
             _indexClient = _serviceClient.Indexes.GetClient("hotels");
         }
 
+        /* This is for paging option
         private async Task<ActionResult> RunQueryAsync(SearchData model, int page, int leftMostPage)
         {
             InitSearch();
@@ -181,6 +268,7 @@ namespace AzureSearchPoc.Controllers
 
             return View("Index", model);
         }
+        */
 
     }
 }
