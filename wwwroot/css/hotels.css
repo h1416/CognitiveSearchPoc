@@ -94,21 +94,3 @@ textarea.box2 {
     font-weight: bold;
     width: 50px;
 }
-
-.facetlist {
-    list-style: none;
-}
-
-.facetchecks {
-    width: 250px;
-    display: normal;
-    color: #666;
-    margin: 10px;
-    padding: 5px;
-}
-
-.facetheader {
-    font-size: 10pt;
-    font-weight: bold;
-    color: darkgreen;
-}
